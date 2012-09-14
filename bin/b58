@@ -1,0 +1,38 @@
+#!/usr/bin/python3
+
+import sys
+
+alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+leadingz_enc = "";
+c = ""
+
+stdinbytes = open(0, 'rb')
+
+# XXX: test with all zero bytes input
+while True:
+    c = stdinbytes.read(1)
+    if len(c) == 0:
+        break
+    if ord(c) == 0:
+        leadingz_enc += "1"
+    else:
+        break
+
+
+allin = c + stdinbytes.read()
+
+lastchar = allin[-1:len(allin)]
+
+accum = 0
+for i in range(0, len(allin)):
+    accum += ord(allin[-i-1:len(allin)-i]) * 256 ** i
+
+b58part = ""
+while accum > 0:
+    b58part = alphabet[accum % 58] + b58part
+    accum //= 58
+
+btcb58 = leadingz_enc + b58part
+
+print(btcb58)
+

@@ -1,0 +1,42 @@
+#!/usr/bin/python3
+
+import sys
+
+alphabet = b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+
+ralphabet = {}
+for i in range(0, len(alphabet)):
+    ralphabet[alphabet[i]] = i
+
+leadingz = b"";
+c = b""
+
+stdinbytes = open(0, 'rb')
+#stdoutbytes = open(1, 'wb')
+
+while True:
+    c = stdinbytes.read(1)
+    if len(c) == 0:
+        break
+    if c == "1":
+        leadingz += chr(0);
+    else:
+        break
+
+allin = c + stdinbytes.read()
+allin = allin.rstrip(b'\n')
+
+accum = 0
+for i in range(0, len(allin)):
+    # FIXME: check they're valid characters somewhere.
+    accum += ralphabet[ord(allin[-i-1:len(allin)-i])] * 58 ** i
+
+output = b""
+while accum > 0:
+    output = bytes([accum % 256]) + output
+    accum //= 256
+
+output = leadingz + output
+
+#stdoutbytes.write(output)
+sys.stdout.buffer.write(output)

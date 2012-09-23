@@ -42,16 +42,6 @@ Flickr-style encoding.  This uses an alphabet of
 and is a function of the numeric value of the input, which means
 that in the case of the input being a binary string, multiple
 inputs can produce the same output due to leading zeroes.
-.It Fl b , -bytes
-Treat the input as a string of bytes, even if the input data is provided
-in the arguments.  In this case, additional binary data may be
-given as the extra arguments
-.Ar BINDATA ... .
-The input byte string is then all of
-.Ar INPUT
-and
-.Ar BINDATA ...
-joined with null bytes.
 .It Fl n , -numeric
 Treat the input as a number (decimal or hexadecimal, as described above),
 even if the input data is provided on standard input.  In this case,

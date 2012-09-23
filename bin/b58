@@ -1,38 +1,81 @@
 #!/usr/bin/python3
 
+import getopt
 import sys
 
-alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-leadingz_enc = "";
-c = ""
+alph = {}
+alph['bitcoin'] = b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+alph['flickr']  = b"123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"
 
-stdinbytes = open(0, 'rb')
+try:
+    opts, args = getopt.getopt(sys.argv[1:], 'fbn', ['bytes', 'numeric'])
+except getopt.GetoptError as err:
+    print(str(err))
+    sys.stderr.write("Usage: b58 [-f] [-b] [-n]\n")
+    sys.exit(64)
 
-# XXX: test with all zero bytes input
-while True:
-    c = stdinbytes.read(1)
-    if len(c) == 0:
-        break
-    if ord(c) == 0:
-        leadingz_enc += "1"
-    else:
-        break
+scheme = "bitcoin"
+bytes = False
+numeric = False
 
+for o, a in opts:
+    if o == '-f':
+        scheme = "flickr"
+    elif o in ('-b', '--bytes'):
+        bytes = True
+    elif o in ('-n', '--numeric'):
+        numeric = True
 
-allin = c + stdinbytes.read()
+leadingz_enc = b"";
+inputnum = 0
 
-lastchar = allin[-1:len(allin)]
+# We aren't able to fully implement b58(1) with the current python interface
+# to argv.  We can't take raw bytes from the argument list.
+# See http://bugs.python.org/issue8776
+if len(args) > 0 and bytes:
+    sys.stderr.write("python 3 implementation can't handle bytes given as "
+                     + "arguments")
+    sys.exit(1)
 
-accum = 0
-for i in range(0, len(allin)):
-    accum += ord(allin[-i-1:len(allin)-i]) * 256 ** i
+elif len(args) == 1:
+    # Deals with decimal and hex (and probably more)
+    try:
+        inputnum = int(args[0], 0)
+    except ValueError as e:
+        sys.stderr.write("INPUT argument not in decimal or hex format: "
+                         + args[0] + "\n")
+        sys.exit(64)
+elif len(args) > 1:
+    sys.stderr.write("too many arguments\n")
+    sys.exit(64)
+elif len(args) == 0:
+    c = b""
+    stdinbytes = open(0, 'rb')
 
-b58part = ""
-while accum > 0:
-    b58part = alphabet[accum % 58] + b58part
-    accum //= 58
+    if scheme == "bitcoin":
+        while True:
+            c = stdinbytes.read(1)
+            if len(c) == 0:
+                break
+            if ord(c) == 0:
+                leadingz_enc += b"1"
+            else:
+                break
 
-btcb58 = leadingz_enc + b58part
+    allin = c + stdinbytes.read()
+    lastchar = allin[-1:len(allin)]
+    for i in range(0, len(allin)):
+        inputnum += ord(allin[-i-1:len(allin)-i]) * 256 ** i
 
-print(btcb58)
+b58part = b""
+while inputnum > 0:
+    # We have to select a range so that the return character is of type
+    # bytes rather than int.  Works okay including selecting last character.
+    b58part = alph[scheme][inputnum % 58:(inputnum % 58) + 1] + b58part
+    inputnum //= 58
 
+b58 = leadingz_enc + b58part
+
+stdoutbytes = open(1, 'wb')
+stdoutbytes.write(b58)
+stdoutbytes.write(b"\n")

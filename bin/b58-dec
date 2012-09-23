@@ -1,42 +1,102 @@
 #!/usr/bin/python3
 
+import getopt
+import re
 import sys
 
-alphabet = b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+alph = {}
+alph['bitcoin'] = b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+alph['flickr']  = b"123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"
 
-ralphabet = {}
-for i in range(0, len(alphabet)):
-    ralphabet[alphabet[i]] = i
+match = {}
+match['bitcoin'] = b"[1-9A-HJ-NP-Za-km-z]*$"
+match['flickr'] = b"[1-9a-km-zA-HJ-NP-Z]*$"
+# Turns out the two initial schemes have identical character sets.  That is,
+# the regexes in the above two lines are identical.  We'll leave this in
+# here as it makes it easier to add other schemes in future.
+
+numeric = False;
+numeric_base = 0;
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], 'fdx', ['decimal', 'hex'])
+except getopt.GetoptError as err:
+    print(str(err))
+    sys.stderr.write("Usage: b58-dec [-f] [-d] [-x] [B58STRING]\n")
+    sys.exit(64)
+
+scheme = "bitcoin"
+
+for o, a in opts:
+    if o == '-f':
+        scheme = "flickr"
+    elif o in ('-d', '--decimal'):
+        numeric = True
+        numeric_base = 10
+    elif o in ('-x', '--hex'):
+        numeric = True
+        numeric_base = 16
 
 leadingz = b"";
 c = b""
 
-stdinbytes = open(0, 'rb')
-#stdoutbytes = open(1, 'wb')
+indata = b""
 
-while True:
-    c = stdinbytes.read(1)
-    if len(c) == 0:
-        break
-    if c == "1":
-        leadingz += chr(0);
-    else:
-        break
+if len(args) > 1:
+    sys.stderr.write("b58-dec: too many arguments\n")
+    exit(64)
+elif len(args) == 1:
+    indata = bytes(args[0], 'ascii')
+elif len(args) == 0:
+    stdinbytes = open(0, 'rb')
+    indata = stdinbytes.read()
+    indata = indata.rstrip(b'\n')
 
-allin = c + stdinbytes.read()
-allin = allin.rstrip(b'\n')
+if not re.match(match[scheme], indata):
+    sys.stderr.write("input contains illegal characters\n")
+    sys.exit(64)
+
+if scheme == 'bitcoin':
+    while True:
+        if len(indata) == 0:
+            break
+        # Selecting a single byte from a byte string gives an integer, so
+        # we need to do that for the single byte here.
+        elif indata[0] == b"1"[0]:
+            # It shouldn't be so hard to get a bytes object representing a
+            # null byte.  How about a chrb()?  I see there is a bchr in
+            # <https://www.dlitz.net/software/pycrypto/api/current/Crypto.Util.py3compat-module.html>
+            leadingz += bytes(chr(0), 'ascii');
+            indata = indata[1:]
+        else:
+            break
+
+ralphabet = {}
+for i in range(0, len(alph[scheme])):
+    # Keys are integers because selecting single byte from byte string.
+    # Values are also integers.
+    ralphabet[alph[scheme][i]] = i
 
 accum = 0
-for i in range(0, len(allin)):
-    # FIXME: check they're valid characters somewhere.
-    accum += ralphabet[ord(allin[-i-1:len(allin)-i])] * 58 ** i
+for i in range(0, len(indata)):
+    # Least significant digit is on the right.
+    accum += ralphabet[indata[-i-1]] * 58 ** i
 
-output = b""
-while accum > 0:
-    output = bytes([accum % 256]) + output
-    accum //= 256
+if numeric:
+    if numeric_base == 10:
+        print(accum)
+    elif numeric_base == 16:
+        print("0x%x" % accum)
+    else:
+        sys.stderr.write("b58-dec: internal error: unsupported number base\n")
+        sys.exit(1)
+    if len(leadingz) > 0:
+        sys.stderr.write("null bytes: " + str(len(leadingz)) + "\n")
+else:
+    output = b""
+    while accum > 0:
+        output = bytes([accum % 256]) + output
+        accum //= 256
 
-output = leadingz + output
-
-#stdoutbytes.write(output)
-sys.stdout.buffer.write(output)
+    output = leadingz + output
+    sys.stdout.buffer.write(output)

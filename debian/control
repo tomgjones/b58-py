@@ -1,0 +1,15 @@
+Source: b58-py
+Section: unknown
+Priority: extra
+Maintainer: Tom Jones <tom@oxix.org>
+Build-Depends: debhelper (>= 7.0.50~), autotools-dev
+Standards-Version: 3.8.4
+Homepage: https://github.com/tomgjones/b58-py
+Vcs-Git: git://github.com/tomgjones/b58-py
+Vcs-Browser: https://github.com/tomgjones/b58-py
+
+Package: b58-py
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, python3
+Description: Encode and decode Base58 strings.  
+ Implementation of b58 and b58-dec.  Encode and decode Base58 strings.

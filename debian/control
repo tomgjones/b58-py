@@ -13,3 +13,4 @@ Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}, python3
 Description: Encode and decode Base58 strings.  
  Implementation of b58 and b58-dec.  Encode and decode Base58 strings.
+Provides: b58

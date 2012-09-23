@@ -1,0 +1,8 @@
+This is an almost-complete implementation of b58(1) and b58-dec(1)
+as defined at
+<https://github.com/tomgjones/b58-interface>.
+
+This implementation is written in Python 3.
+
+I haven't been able to implement the `b58 --bytes` option yet, as
+Python 3 seems to lack an interface to the raw bytes in argv.

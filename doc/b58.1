@@ -1,0 +1,71 @@
+.Dd $MDocdate$
+.Dt b58 1
+.Os
+.Sh NAME
+.Nm b58
+.Nd encode a number as base 58
+.Sh SYNOPSIS
+.Nm
+.Op Fl f
+.Op Fl b
+.Op Fl n
+.Op INPUT
+.Op BINDATA ...
+.Sh DESCRIPTION
+.Nm
+encodes its input in base 58 and writes the result to standard
+output, followed by a newline.  If the
+.Ar INPUT
+argument is given, it may be given as a decimal, 
+or as hexadecimal with prefix 0x.
+IF no
+.Ar INPUT
+argument is present, 
+.Nm
+reads from its standard input.  In this case the format of the
+input is raw binary data by default.
+.Pp
+The default base58 encoding is the Bitcoin encoding, but others
+may be selected as described in OPTIONS.  The bitcoin encoding
+isn't purely a base58 encoding, since leading zeroes are encoded
+with each full zero byte encoded as a single "1".  This does mean
+that the Bitcoin scheme is fully reversible, even in cases where the
+input is a binary string starting with null bytes.  The Bitcoin
+alphabet for the base58 part is
+"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".
+.Pp
+Options are:
+.Bl -tag -width Ds
+.It Fl f
+Flickr-style encoding.  This uses an alphabet of 
+"123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"
+and is a function of the numeric value of the input, which means
+that in the case of the input being a binary string, multiple
+inputs can produce the same output due to leading zeroes.
+.It Fl b , -bytes
+Treat the input as a string of bytes, even if the input data is provided
+in the arguments.  In this case, additional binary data may be
+given as the extra arguments
+.Ar BINDATA ... .
+The input byte string is then all of
+.Ar INPUT
+and
+.Ar BINDATA ...
+joined with null bytes.
+.It Fl n , -numeric
+Treat the input as a number (decimal or hexadecimal, as described above),
+even if the input data is provided on standard input.  In this case,
+the data fed to standard input is allowed to contain a single newline
+at the end.
+.El
+.Sh EXIT STATUS
+.Ex -std b58
+.Sh SECURITY CONSIDERATIONS
+On most systems, process arguments are visible to other users.  So if
+you're processing confidential data, feed
+.Nm
+its input on its standard input, rather than via its argument list.
+.Sh INTERFACE VERSION
+This version of
+.Xr b58 1
+is part of version 0.1 of b58-interface.

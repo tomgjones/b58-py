@@ -1,0 +1,64 @@
+.Dd $MDocdate$
+.Dt b58-dec 1
+.Os
+.Sh NAME
+.Nm b58-dec
+.Nd decode a base 58-encoded string
+.Sh SYNOPSIS
+.Nm
+.Op Fl f
+.Op Fl d
+.Op Fl x
+.Op B58STRING
+.Sh DESCRIPTION
+.Nm
+decodes its input from base58 and writes the result to standard output,
+as a byte string by default.
+If 
+.Ar B58STRING
+is given, the input is taken from that argument.  Otherwise the
+input is taken from standard input, in which case it's allowed to
+contain a single newline at the end.
+
+The default base58 encoding is the Bitcoin encoding.  See
+.Xr b58 1
+for a fuller discussion of the available encodings.
+
+For output formats that are strings representing numbers (see -d
+and -h), and if the Bitcoin encoding scheme is in use, then any leading
+null bytes that would exist in the byte string are reported to
+standard error in the form "null bytes: N", followed by a newline,
+where N is the number
+of leading null bytes.  In this case, unless
+.Nm
+fails, this will be the only line written to standard error.
+
+Options are:
+.Bl -tag -width Ds
+.It Fl f
+Flickr-style encoding.
+.It Fl d , -decimal
+Output the decoded value as a string representing a decimal number,
+followed by a newline.  Leading zero bytes for the Bitcoin scheme
+are represented as described
+above.
+.It Fl x , -hex
+Output the decoded value as a string representing a hexadecimal number,
+including a leading "0x", followed by a newline.  Leading zero bytes 
+for the Bitcoin scheme
+are represented as described
+above.
+.Sh EXIT STATUS
+.Ex -std b58
+
+A usage error, including providing any invalid data to decode, results
+in an exit code of 64.
+.Sh SECURITY CONSIDERATIONS
+On most systems, argument lists are visible to other users.  So if
+you're processing confidential data, feed
+.Nm
+its input on its standard input, rather than in
+.Ar B58STRING .
+
+.Sh SEE ALSO
+.Xr b58 1
